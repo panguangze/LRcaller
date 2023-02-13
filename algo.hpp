@@ -43,6 +43,7 @@ inline constexpr size_t NO_BEST = size_t(-1ull);
 class varAlignInfo
 {
 public:
+    std::string qname;
     size_t              nD;
     size_t              nI;
     size_t              nAlleles;
@@ -223,6 +224,7 @@ public:
 void getGtString(std::vector<double> &       lls,
                  std::vector<size_t> const & ads,
                  std::vector<size_t> const & vas,
+                 std::vector<std::string> & va_reads,
                  std::string &               gtString)
 {
     size_t gtLen = lls.size();
@@ -275,6 +277,9 @@ void getGtString(std::vector<double> &       lls,
         if (i != gtLen - 1)
             buff << ",";
     }
+    buff << ":";
+    buff << va_reads[0]<< ":";
+    buff << va_reads[1];
     gtString = buff.str();
 }
 
@@ -285,6 +290,7 @@ inline void multiUpdateVC(seqan::VcfRecord const &          var,
                           std::vector<double> &             vC,
                           std::vector<size_t> &             rI,
                           std::vector<size_t> &             VAs,
+                          std::vector<std::string> &        VA_qnames,
                           size_t const                      wSizeActual,
                           LRCOptions const &                O,
                           genotyping_model const            gtm)
@@ -317,9 +323,14 @@ inline void multiUpdateVC(seqan::VcfRecord const &          var,
 
         if (gtm == genotyping_model::va || gtm == genotyping_model::joint)
         {
+//            if(vai.qname == "m64011_190901_095311/143853997/ccs") {
+//                int t = 9;
+//            }
             size_t bestI = vai.vaPreference(O, length(var.ref), altLens, prefs);
-            if (bestI != NO_BEST)
+            if (bestI != NO_BEST) {
                 VAs[bestI]++;
+                VA_qnames[bestI] = VA_qnames[bestI] + ","+vai.qname;
+            }
             VAs[VAs.size() - 1]++;
             if (O.verbose)
                 std::cerr << "va " << /*TODO vai.first <<*/ " " << vai.nD << " " << vai.nI << " " << prefs[0] << " "
@@ -450,7 +461,7 @@ inline void getLocRefAlt(seqan::VcfRecord const &  variant,
             std::cerr << "rID " << chrom << " " << beginPos
                       << " WARNING: reference FAI index has no entry for rID in Ref std::mapped.\n";
     }
-
+//    beginPos = 181600000;
     if (O.genotypeRightBreakpoint)
         readRegion(refSeq, faiI, idx, beginPos - wSizeActual + length(ref), beginPos + length(ref) + wSizeActual);
     else
@@ -620,7 +631,10 @@ inline void cropSeq(seqan::BamAlignmentRecord const & bar,
         rEnd = (ssize_t)length(bar.seq);
     if (O.verbose)
         std::cerr << "ToInfix " << rBeg << " " << rEnd << " " << length(bar.seq) << '\n';
-
+//    a little bug here
+    if (rEnd == rBeg) {
+        rBeg = rBeg - 1;
+    }
     croppedSeq = infixWithLength(bar.seq, rBeg, rEnd - rBeg);
 
     if (O.verbose)
@@ -651,6 +665,9 @@ inline void LRprocessReads(seqan::VcfRecord const &                             
                            size_t const                                           wSizeActual,
                            LRCOptions const &                                     O)
 {
+    if (variant.beginPos == 189408303) {
+        int tmp = 0;
+    }
     TSequence              refSeq;
     std::vector<TSequence> altSeqs;
 
@@ -702,13 +719,16 @@ inline void LRprocessReads(seqan::VcfRecord const &                             
     {
         seqan::BamAlignmentRecord const & b   = *overlappingBars[i];
         varAlignInfo &                    vai = vais[i];
-
+        if (b.qName == "m64012_190921_234837/122881456/ccs") {
+            int tmp = 0;
+        }
         seqan::clear(seqToAlign);
+        int tmp3 = (ssize_t)length(b.seq);
+
         if (O.cropRead)
             cropSeq(b, variant, wSizeActual, O, seqToAlign);
         else
             seqToAlign = b.seq; // converts IUPAC to Dna5
-
         for (auto & seqH : seqsH)
             seqH = infix(seqToAlign, 0, seqan::length(seqToAlign));
 
@@ -822,7 +842,7 @@ inline void examineBamAlignment(seqan::BamAlignmentRecord const & bar,
     char    cigarOperation = cigarString[cigarI].operation;
     int32_t regionBeg      = var.beginPos - O.varWindow;
     int32_t regionEnd      = var.beginPos + (int32_t)length(var.ref) + O.varWindow;
-
+    vai.qname = seqan::toCString(bar.qName);
     seqan::StringSet<seqan::CharString> infos;
     strSplit(infos, var.info, seqan::EqualsChar<';'>());
 
@@ -878,14 +898,14 @@ inline void examineBamAlignment(seqan::BamAlignmentRecord const & bar,
         std::cerr << "TRR " << regionBeg << " " << regionEnd << '\n';
     //  }
 
-    if (alignPos < regionBeg)
+    if (alignPos  < regionBeg)
         vai.alignsLeft = true;
 
     // Find the first position that overlaps the window we are interested in
     while (alignPos < regionBeg && cigarI < length(cigarString))
     {
         cigarOperation = cigarString[cigarI].operation;
-        if (cigarOperation == 'M' || cigarOperation == 'D')
+        if (cigarOperation == 'M' || cigarOperation == '=' || cigarOperation == 'D' || cigarOperation == 'X')
         {
             alignPos += cigarString[cigarI].count;
         }
@@ -1061,6 +1081,21 @@ inline void parseReads(std::vector<seqan::BamAlignmentRecord> const &   bars,
         std::cerr << "Exiting readBamRegion " << '\n';
 }
 
+std::vector<std::string> split (std::string s, std::string delimiter) {
+    size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+    std::string token;
+    std::vector<std::string> res;
+
+    while ((pos_end = s.find (delimiter, pos_start)) != std::string::npos) {
+        token = s.substr (pos_start, pos_end - pos_start);
+        pos_start = pos_end + delim_len;
+        res.push_back (token);
+    }
+
+    res.push_back (s.substr (pos_start));
+    return res;
+}
+
 inline size_t getWSizeActual(std::span<seqan::VcfRecord> vcfRecords, LRCOptions const & O)
 {
     if (O.dynamicWSize)
@@ -1068,6 +1103,17 @@ inline size_t getWSizeActual(std::span<seqan::VcfRecord> vcfRecords, LRCOptions 
         size_t maxAlleleLength = 0;
         for (seqan::VcfRecord & var : vcfRecords)
         {
+            auto res = std::string(seqan::toCString(var.info));
+            auto infos = split(res,";");
+            size_t svlen = 0;
+            for (auto& item : infos) {
+                if (item.find("SVLEN") != std::string::npos) {
+                    svlen = abs(std::stoi(item.substr(6, item.length() - 1)));
+                    break;
+                }
+            }
+//            int index = res.find("SVLEN");
+//            auto svlen = res.substr(index, index)
             for (size_t i = 0, len = 1; i <= seqan::length(var.alt); ++i, ++len)
             {
                 if (i == seqan::length(var.alt) || var.alt[i] == ',')
@@ -1076,6 +1122,7 @@ inline size_t getWSizeActual(std::span<seqan::VcfRecord> vcfRecords, LRCOptions 
                     len             = 0;
                 }
             }
+            maxAlleleLength = std::max(maxAlleleLength, svlen);
         }
 
         return maxAlleleLength + O.wSize;
@@ -1147,6 +1194,7 @@ inline void processChunk(std::vector<seqan::BamFileIn> &            bamFiles,
         std::vector<std::vector<double>> vC; // variant calls
         std::vector<std::vector<size_t>> AD; // Allele depth counts
         std::vector<std::vector<size_t>> VA; // Variant seqan::Alignment counts
+        std::vector<std::string> VA_QNAMES;
 
         if (O.gtModel == genotyping_model::multi)
         {
@@ -1167,6 +1215,7 @@ inline void processChunk(std::vector<seqan::BamFileIn> &            bamFiles,
             AD[mI].resize(nAlleles + 1);
             VA[mI].resize(nAlleles + 1);
         }
+        VA_QNAMES.resize(nAlleles + 1);
 
         std::vector<seqan::BamAlignmentRecord const *> overlappingBars;
         std::vector<varAlignInfo>                      alignInfos;
@@ -1176,23 +1225,24 @@ inline void processChunk(std::vector<seqan::BamFileIn> &            bamFiles,
 
         if (O.gtModel == genotyping_model::multi)
         {
-            multiUpdateVC(var, alignInfos, vC[0], AD[0], VA[0], wSizeActual, O, genotyping_model::ad);
-            multiUpdateVC(var, alignInfos, vC[1], AD[1], VA[1], wSizeActual, O, genotyping_model::va);
-            multiUpdateVC(var, alignInfos, vC[2], AD[2], VA[2], wSizeActual, O, genotyping_model::joint);
-            multiUpdateVC(var, alignInfos, vC[3], AD[3], VA[3], wSizeActual, O, genotyping_model::presence);
-            multiUpdateVC(var, alignInfos, vC[4], AD[4], VA[4], wSizeActual, O, genotyping_model::va_old);
+            multiUpdateVC(var, alignInfos, vC[0], AD[0], VA[0],VA_QNAMES, wSizeActual, O, genotyping_model::ad);
+            multiUpdateVC(var, alignInfos, vC[1], AD[1], VA[1],VA_QNAMES, wSizeActual, O, genotyping_model::va);
+            multiUpdateVC(var, alignInfos, vC[2], AD[2], VA[2],VA_QNAMES, wSizeActual, O, genotyping_model::joint);
+            multiUpdateVC(var, alignInfos, vC[3], AD[3], VA[3],VA_QNAMES, wSizeActual, O, genotyping_model::presence);
+            multiUpdateVC(var, alignInfos, vC[4], AD[4], VA[4],VA_QNAMES, wSizeActual, O, genotyping_model::va_old);
         }
         else
         {
-            multiUpdateVC(var, alignInfos, vC[0], AD[0], VA[0], wSizeActual, O, O.gtModel);
+            multiUpdateVC(var, alignInfos, vC[0], AD[0], VA[0],VA_QNAMES, wSizeActual, O, O.gtModel);
         }
 
         std::string gtString;
         for (size_t mI = 0; mI < vC.size(); mI++)
         {
-            getGtString(vC[mI], AD[mI], VA[mI], gtString);
-            appendValue(var.genotypeInfos, gtString);
-            var.format = "GT:AD:VA:PL";
+            getGtString(vC[mI], AD[mI], VA[mI],VA_QNAMES, gtString);
+//            appendValue(var.genotypeInfos, gtString);
+            var.genotypeInfos[0] = gtString;
+            var.format = "GT:AD:VA:PL:REFREADS:ALTREADS";
         }
     }
 }

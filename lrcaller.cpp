@@ -42,6 +42,14 @@ void mainProgram(LRCOptions & O)
       header,
       seqan::VcfHeaderRecord("FORMAT",
                              "<ID=PL,Number=G,Type=Integer,Description=\"PHRED-scaled genotype likelihoods\">"));
+    appendValue(
+      header,
+      seqan::VcfHeaderRecord("FORMAT",
+                             "<ID=REFREADS,Number=1,Type=String,Description=\"Reads support ref\">"));
+    appendValue(
+      header,
+      seqan::VcfHeaderRecord("FORMAT",
+                             "<ID=ALTREADS,Number=1,Type=String,Description=\"Reads support alt\">"));
     std::ofstream     vcfStream(O.vcfOutFile.c_str());
     seqan::VcfFileOut vcfOut(vcfIn);
     open(vcfOut, vcfStream, seqan::Vcf());
