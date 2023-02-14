@@ -278,8 +278,16 @@ void getGtString(std::vector<double> &       lls,
             buff << ",";
     }
     buff << ":";
-    buff << va_reads[0]<< ":";
-    buff << va_reads[1];
+    if (va_reads[0].empty()) {
+        buff <<".:";
+    }else {
+        buff << va_reads[0]<< ":";
+    }
+    if (va_reads[1].empty()) {
+        buff <<".:";
+    }else {
+        buff << va_reads[1];
+    }
     gtString = buff.str();
 }
 
