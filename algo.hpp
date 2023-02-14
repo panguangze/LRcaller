@@ -284,7 +284,7 @@ void getGtString(std::vector<double> &       lls,
         buff << va_reads[0]<< ":";
     }
     if (va_reads[1].empty()) {
-        buff <<".:";
+        buff <<".";
     }else {
         buff << va_reads[1];
     }
