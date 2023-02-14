@@ -1219,9 +1219,12 @@ inline void processChunk(std::vector<seqan::BamFileIn> &            bamFiles,
 
         std::vector<seqan::BamAlignmentRecord const *> overlappingBars;
         std::vector<varAlignInfo>                      alignInfos;
-        parseReads(bars, var, overlappingBars, alignInfos, wSizeActual, O);
-
-        LRprocessReads(var, chrom, faIndex, overlappingBars, alignInfos, wSizeActual, O);
+        try{
+            parseReads(bars, var, overlappingBars, alignInfos, wSizeActual, O);
+            LRprocessReads(var, chrom, faIndex, overlappingBars, alignInfos, wSizeActual, O);
+        } catch (std::exception	e) {
+            std::cout<<"execption"<<var.beginPos<<std::endl;
+        }
 
         if (O.gtModel == genotyping_model::multi)
         {
