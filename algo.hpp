@@ -1251,9 +1251,10 @@ inline void processChunk(std::vector<seqan::BamFileIn> &            bamFiles,
         for (size_t mI = 0; mI < vC.size(); mI++)
         {
             getGtString(vC[mI], AD[mI], VA[mI],VA_QNAMES, gtString);
-            appendValue(var.genotypeInfos, gtString);
-            var.genotypeInfos[0] += gtString;
-            var.format += ":REFREADS:ALTREADS";
+//            appendValue(var.genotypeInfos, gtString);
+//            var.genotypeInfos[0] += gtString;
         }
+        var.genotypeInfos[0] += gtString;
+        var.format += ":REFREADS:ALTREADS";
     }
 }
