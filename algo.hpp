@@ -259,24 +259,24 @@ void getGtString(std::vector<double> &       lls,
         }
     }
     std::ostringstream buff;
-    buff << maxA2 << "/" << maxA1 << ":";
-    for (size_t i = 0; i < ads.size() - 1; i++)
-        buff << ads[i] << ",";
-    buff << ads[ads.size() - 1] << ":";
-
-    for (size_t i = 0; i < vas.size() - 1; i++)
-        buff << vas[i] << ",";
-    buff << vas[vas.size() - 1] << ":";
-
-    for (size_t i = 0; i < gtLen; i++)
-    {
-        double lp = (lls[i] - maxP) / LG10;
-        if (lp < LL_THRESHOLD)
-            lp = LL_THRESHOLD;
-        buff << int(-10 * lp);
-        if (i != gtLen - 1)
-            buff << ",";
-    }
+//    buff << maxA2 << "/" << maxA1 << ":";
+//    for (size_t i = 0; i < ads.size() - 1; i++)
+//        buff << ads[i] << ",";
+//    buff << ads[ads.size() - 1] << ":";
+//
+//    for (size_t i = 0; i < vas.size() - 1; i++)
+//        buff << vas[i] << ",";
+//    buff << vas[vas.size() - 1] << ":";
+//
+//    for (size_t i = 0; i < gtLen; i++)
+//    {
+//        double lp = (lls[i] - maxP) / LG10;
+//        if (lp < LL_THRESHOLD)
+//            lp = LL_THRESHOLD;
+//        buff << int(-10 * lp);
+//        if (i != gtLen - 1)
+//            buff << ",";
+//    }
     buff << ":";
     if (va_reads[0].empty()) {
         buff <<".:";
@@ -1251,9 +1251,9 @@ inline void processChunk(std::vector<seqan::BamFileIn> &            bamFiles,
         for (size_t mI = 0; mI < vC.size(); mI++)
         {
             getGtString(vC[mI], AD[mI], VA[mI],VA_QNAMES, gtString);
-//            appendValue(var.genotypeInfos, gtString);
-            var.genotypeInfos[0] = gtString;
-            var.format = "GT:AD:VA:PL:REFREADS:ALTREADS";
+            appendValue(var.genotypeInfos, gtString);
+            var.genotypeInfos[0] += gtString;
+            var.format += ":REFREADS:ALTREADS";
         }
     }
 }
