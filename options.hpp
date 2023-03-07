@@ -39,7 +39,7 @@ struct LRCOptions
     int gapExtend = -1;
 
     bool   mask                  = false;
-    bool   cropRead              = true;
+    bool   cropRead              = false;
     bool   outputRefAlt          = false;  // For debug purposes
     size_t maxSoftClipped        = 500;    // Read cannot be softclipped at invariant end
     double maxAlignBits          = 10.0;   // needs to be added as option
@@ -124,6 +124,7 @@ inline int parseLRCArguments(int argc, char const ** argv, LRCOptions & O)
               seqan::ArgParseOption("w", "window_size", "Window size", seqan::ArgParseArgument::INTEGER, "INT"));
 
     addOption(parser, seqan::ArgParseOption("", "dyn-w-size", "Dynamically adjust window size to allele length."));
+    addOption(parser, seqan::ArgParseOption("", "cropread", "Dynamically adjust window size to allele length."));
 
     addOption(
       parser,
@@ -327,7 +328,7 @@ inline int parseLRCArguments(int argc, char const ** argv, LRCOptions & O)
         O.gtModel = genotyping_model::joint;
     if (isSet(parser, "logScaleFactor"))
         getOptionValue(O.logScaleFactor, parser, "logScaleFactor");
-     O.cropRead = isSet(parser, "cropread");
+    O.cropRead = isSet(parser, "cropread");
     O.verbose                 = isSet(parser, "verbose");
     O.genotypeRightBreakpoint = isSet(parser, "right_breakpoint");
     O.outputRefAlt            = isSet(parser, "get_ref_alt");
