@@ -327,7 +327,7 @@ inline int parseLRCArguments(int argc, char const ** argv, LRCOptions & O)
         O.gtModel = genotyping_model::joint;
     if (isSet(parser, "logScaleFactor"))
         getOptionValue(O.logScaleFactor, parser, "logScaleFactor");
-    // O.cropRead = isSet(parser, "cropread");
+     O.cropRead = isSet(parser, "cropread");
     O.verbose                 = isSet(parser, "verbose");
     O.genotypeRightBreakpoint = isSet(parser, "right_breakpoint");
     O.outputRefAlt            = isSet(parser, "get_ref_alt");
