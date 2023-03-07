@@ -799,7 +799,7 @@ inline void parseBamFileName(std::filesystem::path const &              bfN,
 
     for (std::filesystem::path & p : paths)
     {
-        if (!p.native().ends_with(".bam") && !p.native().ends_with(".sam.gz"))
+        if (!p.native().ends_with(".bam") && !p.native().ends_with(".sam.gz") && !p.native().ends_with(".cram"))
             throw error{"Input file '", p, "' has unrecognized extension."};
 
         if (!std::filesystem::exists(p))
@@ -807,8 +807,8 @@ inline void parseBamFileName(std::filesystem::path const &              bfN,
 
         std::filesystem::path p_bai = p;
         p_bai += ".bai";
-        if (!std::filesystem::exists(p_bai))
-            throw error{"Input file '", p, "' has no corresponding '.bai' index."};
+//        if (!std::filesystem::exists() && !std::filesystem::exists(""))
+//            throw error{"Input file '", p, "' has no corresponding '.bai' index."};
 
         if (O.cacheDataInTmp) // copy to tmp
         {
