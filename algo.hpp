@@ -167,7 +167,7 @@ public:
             return NO_BEST;
         }
 
-        if (!alignsLeft || !alignsRight)
+        if (!alignsLeft)
         {
             return NO_BEST;
         }
@@ -324,8 +324,11 @@ inline void multiUpdateVC(seqan::VcfRecord const &          var,
         if (gtm == genotyping_model::ad || gtm == genotyping_model::joint)
         {
             size_t bestI = vai.alignmentPreference(wSizeActual, O, prefs);
-            if (bestI != NO_BEST)
+            if (bestI != NO_BEST) {
                 rI[bestI]++;
+                VA_qnames[bestI] = VA_qnames[bestI] + ","+vai.qname;
+            }
+
             rI[rI.size() - 1]++;
         }
 
@@ -337,7 +340,6 @@ inline void multiUpdateVC(seqan::VcfRecord const &          var,
             size_t bestI = vai.vaPreference(O, length(var.ref), altLens, prefs);
             if (bestI != NO_BEST) {
                 VAs[bestI]++;
-                VA_qnames[bestI] = VA_qnames[bestI] + ","+vai.qname;
             }
             VAs[VAs.size() - 1]++;
             if (O.verbose)
@@ -673,7 +675,7 @@ inline void LRprocessReads(seqan::VcfRecord const &                             
                            size_t const                                           wSizeActual,
                            LRCOptions const &                                     O)
 {
-    if (variant.beginPos == 189408303) {
+    if (variant.beginPos == 977572 || variant.beginPos == 977571) {
         int tmp = 0;
     }
     TSequence              refSeq;
@@ -727,7 +729,7 @@ inline void LRprocessReads(seqan::VcfRecord const &                             
     {
         seqan::BamAlignmentRecord const & b   = *overlappingBars[i];
         varAlignInfo &                    vai = vais[i];
-        if (b.qName == "m64012_190921_234837/122881456/ccs") {
+        if (b.qName == "A00297:158:HT275DSXX:3:1570:10212:17957") {
             int tmp = 0;
         }
         seqan::clear(seqToAlign);
@@ -987,6 +989,9 @@ inline void parseReads(std::vector<seqan::BamAlignmentRecord> const &   bars,
 {
     int32_t beg = var.beginPos - wSizeActual;
     int32_t end = var.beginPos + wSizeActual;
+    if (var.beginPos == 977572 || var.beginPos == 977571) {
+        int tmp = 0;
+    }
 
     if (O.genotypeRightBreakpoint)
     {
@@ -1009,6 +1014,9 @@ inline void parseReads(std::vector<seqan::BamAlignmentRecord> const &   bars,
 
     for (seqan::BamAlignmentRecord const & record : bars)
     {
+        if (record.qName == "A00297:158:HT275DSXX:3:1570:10212:17957") {
+            int tmp =3;
+        }
         if (overlappingBars.size() >= O.maxBARcount || record.beginPos > stopReading) // || record.rID != rID)
             return;
 
@@ -1141,7 +1149,7 @@ inline size_t getWSizeActual(std::span<seqan::VcfRecord> vcfRecords, LRCOptions 
     }
 }
 
-inline void processChunk(std::vector<seqan::BamFileIn> &            bamFiles,
+inline void                         processChunk(std::vector<seqan::BamFileIn> &            bamFiles,
                          std::vector<seqan::BamIndex<seqan::Bai>> & bamIndexes,
                          seqan::FaiIndex &                          faIndex,
                          seqan::CharString const &                  chrom,
